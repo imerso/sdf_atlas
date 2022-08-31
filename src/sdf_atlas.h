@@ -23,6 +23,7 @@
 
 #include "glyph_painter.h"
 #include <string>
+#include <fstream>
 
 struct GlyphRect {
     uint32_t codepoint = 0;
@@ -30,28 +31,36 @@ struct GlyphRect {
     float x0 = 0.0f, y0 = 0.0f, x1 = 0.0f, y1 = 0.0f;    
 };
 
-struct SdfAtlas {
-    Font *font        = nullptr;
-    float tex_width   = 2048.0f;
-    float row_height  = 96.0f;
-    float sdf_size    = 16.0f;
-    int   glyph_count = 0;
+class SdfAtlas {
+    public:
 
-    float posx = 0;
-    float posy = 0;
-    int   max_height = 0;
+        Font *font        = nullptr;
+        float tex_width   = 2048.0f;
+        float row_height  = 96.0f;
+        float sdf_size    = 16.0f;
+        int   glyph_count = 0;
 
-    std::vector<GlyphRect> glyph_rects;
+        float posx = 0;
+        float posy = 0;
+        int   max_height = 0;
+        std::ofstream bin_file;
 
-    void init( Font *font, float tex_width, float row_height, float sdf_size );
+        std::vector<GlyphRect> glyph_rects;
 
-    void allocate_codepoint( uint32_t codepoint );
+        void init( Font *font, float tex_width, float row_height, float sdf_size );
 
-    void allocate_all_glyphs();    
+        void allocate_codepoint( uint32_t codepoint );
 
-    void allocate_unicode_range( uint32_t start, uint32_t end ); // end is inclusive    
-    
-    void draw_glyphs( GlyphPainter& gp ) const;
+        void allocate_all_glyphs();    
 
-    std::string json( float tex_height, bool flip_texcoord_y = true ) const;
+        void allocate_unicode_range( uint32_t start, uint32_t end ); // end is inclusive    
+        
+        void draw_glyphs( GlyphPainter& gp );
+
+        void write_char(char value);
+        void write_int(int value);
+        void write_float(float value);
+
+        std::string json( float tex_height, bool flip_texcoord_y = true );
+        bool bin( float tex_height, std::string filename, bool flip_texcoord_y = true );
 };

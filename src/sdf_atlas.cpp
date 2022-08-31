@@ -86,7 +86,7 @@ void SdfAtlas::allocate_unicode_range( uint32_t start, uint32_t end ) {
     }
 }
 
-void SdfAtlas::draw_glyphs( GlyphPainter& gp ) const {
+void SdfAtlas::draw_glyphs( GlyphPainter& gp ) {
     float fheight = font->ascent - font->descent;
     float scale = row_height / fheight;
     float baseline = -font->descent * scale;
@@ -99,7 +99,7 @@ void SdfAtlas::draw_glyphs( GlyphPainter& gp ) const {
     }
 }
 
-std::string SdfAtlas::json( float tex_height, bool flip_texcoord_y ) const {
+std::string SdfAtlas::json( float tex_height, bool flip_texcoord_y ) {
     float fheight = font->ascent - font->descent;
     float scaley = row_height / tex_height / fheight; 
     float scalex = row_height / tex_width / fheight;   
@@ -193,4 +193,73 @@ std::string SdfAtlas::json( float tex_height, bool flip_texcoord_y ) const {
     ss << "}; // end font" << std::endl;    
     
     return ss.str();
+}
+
+
+bool SdfAtlas::bin( float tex_height, std::string filename, bool flip_texcoord_y ) {
+    bin_file.open( filename, std::ios::out | std::ios::binary );
+    if ( !bin_file ) {
+        std::cout << "Error writing font file." << std::endl;
+    }
+
+    // write row height
+    write_float(row_height / tex_height);
+
+    // write number of chars
+    write_char((char)glyph_rects.size());
+
+    float fheight = font->ascent - font->descent;
+    //float scaley = row_height / tex_height / fheight; 
+    float scalex = row_height / tex_width / fheight;   
+
+    //const Glyph& gspace = font->glyphs[ font->glyph_idx( ' ' ) ];
+    //const Glyph& gx     = font->glyphs[ font->glyph_idx( 'x' ) ];
+    //const Glyph& gxcap  = font->glyphs[ font->glyph_idx( 'X' ) ];
+    
+    std::unordered_set<uint32_t> codepoints;
+    for ( size_t igr = 0; igr < glyph_rects.size(); ++igr ) {
+        codepoints.insert( glyph_rects[igr].codepoint );
+    }
+
+    for ( size_t igr = 0; igr < glyph_rects.size(); ++igr ) {
+
+        const GlyphRect& gr = glyph_rects[ igr ];
+        const Glyph& g = font->glyphs[ gr.glyph_idx ];
+        float tcy0 = gr.y0 / tex_height;
+        float tcy1 = gr.y1 / tex_height;
+
+        if ( flip_texcoord_y ) {
+            tcy0 = 1.0 - gr.y1 / tex_height;
+            tcy1 = 1.0 - gr.y0 / tex_height;
+        }
+
+        // write ascii char
+        write_char((char)gr.codepoint);
+        // write uv coordinates
+        write_float(gr.x0 / tex_width);
+        write_float(tcy0);
+        write_float(gr.x1 / tex_width);
+        write_float(tcy1);
+        // write advance_x
+        write_float(g.advance_width * scalex);
+    }
+
+    bin_file.close();
+    return true;
+}
+
+
+void SdfAtlas::write_char(char value)
+{
+    bin_file.write((char*)&value, 1);
+}
+
+void SdfAtlas::write_int(int value)
+{
+    bin_file.write((char*)&value, 4);
+}
+
+void SdfAtlas::write_float(float value)
+{
+    bin_file.write((char*)&value, 4);
 }

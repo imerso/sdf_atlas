@@ -345,15 +345,17 @@ int main( int argc, char* argv[] ) {
 
     // Saving JSON
 
-    std::string json = sdf_atlas.json( height );
-    std::ofstream json_file;
-    json_file.open( res_filename + ".js" );
-    if ( !json_file ) {
-        std::cout << "Error writing json file." << std::endl;
-    }
-    json_file << json;
-    json_file.close();
-    
+//    std::string json = sdf_atlas.json( height );
+//    std::ofstream json_file;
+//    json_file.open( res_filename + ".js" );
+//    if ( !json_file ) {
+//        std::cout << "Error writing json file." << std::endl;
+//    }
+//    json_file << json;
+//    json_file.close();
+
+    sdf_atlas.bin(height, res_filename + ".fon");
+
     glfwTerminate();
     
     return 0;
